@@ -28,17 +28,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
-import Card from 'primevue/card';
-import Button from 'primevue/button';
-import InputText from 'primevue/inputtext';
-import Password from 'primevue/password';
+//import { ref } from 'vue';
+//import Card from 'primevue/card';
+//import Button from 'primevue/button';
+//import InputText from 'primevue/inputtext';
+//mport Password from 'primevue/password';
 
-const email = ref('');
-const password = ref('');
-const loading = ref(false);
+//const email = ref('');
+//const password = ref('');
+//const loading = ref(false);
 
-const handleLogin = () => {
+/** const handleLogin = () => {
   loading.value = true;
   console.log('Tentando logar com:', email.value);
   // Aqui chamaremos sua API Node.js depois!
