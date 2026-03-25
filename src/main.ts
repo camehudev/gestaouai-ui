@@ -14,11 +14,14 @@ import Badge from 'primevue/badge';
 import Button from 'primevue/button';
 import Menu from 'primevue/menu';
 import Menubar from 'primevue/menubar'; // Certifique-se de registrar o Menubar também!
+import 'primeicons/primeicons.css';
+import Chart from 'primevue/chart';
 
 const app = createApp(App);
 
 // 2. REGISTRE A DIRETIVA (Isso resolve o erro "Failed to resolve directive")
 app.directive('ripple', Ripple);
+app.component('Chart', Chart);
 
 app.use(ToastService);
 app.use(router);

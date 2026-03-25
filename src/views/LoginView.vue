@@ -1,7 +1,7 @@
 <template>
   <div class="login-container">
     <div class="lado-esquerdo">
-      <Card style="width: 25rem; padding: 1rem; overflow: hidden">
+      <Card style="width: 25rem; padding: 1rem; overflow: hidden; border-radius: 5px;background-color: #F6F6F6;">
         <template #title>Bem Vindo!</template>
         <!-- <template #subtitle>A Batuta para seu negocio</template> -->
         
