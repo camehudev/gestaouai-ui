@@ -10,6 +10,8 @@ const toast = useToast();
 const menu = ref();
 const menuHeader = ref(false);
 
+const statusCaixa = ref(false);
+
 // Não importe o defineProps! Use-o diretamente:
 const props = defineProps<{
   user: {
@@ -94,21 +96,23 @@ const menuItems = ref([
   }
 ]);
 
+const checked = ref(false);
+const aoMudarStatus = () => {
+    console.log("O novo valor é:", statusCaixa.value);
+    
+    if (!statusCaixa.value) {
+       statusCaixa.value = true;
+    } else{
+      statusCaixa.value = false;
+    }
+};
+
 </script>
 
 <template>
     <div class="header-uai">
         <Menubar :model="items">
-    <template #start>       
-        <!-- <div class="flex">
-        <img 
-            src="@/assets/logo_azul-profundo.png" 
-            style="height: 80px; width: auto;" 
-            class="" 
-        />       
-    </div> -->
 
-    </template>
     <template  #item="{ item, props, hasSubmenu, root }">
         <a v-ripple class="flex items-center container-header-link" v-bind="props.action">
             <span>{{ item.label }}</span>
@@ -117,9 +121,20 @@ const menuItems = ref([
             <i v-if="hasSubmenu" :class="['pi pi-angle-down ml-auto', { 'pi-angle-down': root, 'pi-angle-right': !root }]"></i>
         </a>
     </template>
-    <template #end>  
+
+    <template #start>
+      <div style="display: flex; justify-content: end; align-items: center; width: 50vw;" class="card">
+        <ToggleSwitch v-model="checked" style="margin-right: .5rem;" @change="aoMudarStatus" />
+        <span style="color: aliceblue;" class="text-xs font-bold uppercase" >
+                {{ statusCaixa ? 'Estabelecimento aberto' : 'Estabelecimento fechado' }}
+            </span>
+      </div>
+
+    </template>
+    <template #end>       
             
-        <div class="avatar">
+        <div class="avatar">           
+
           <div class="flex flex-column text-right hidden md:block avatar2">
             <span style="color: #2ecc71 ;" class="text-sm opacity-70">Olá, &nbsp;</span>
             <span style="color: #2ecc71 ;" class="font-bold text-900">{{ user?.user?.name || 'Visitante' }}</span>

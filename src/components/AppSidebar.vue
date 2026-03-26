@@ -17,17 +17,18 @@
 </template>
 
 <script setup lang="ts">
+import router from "@/router";
 import { ref } from "vue";
 
 const items = ref([
   {    
     items: [
-      { label: 'Home', icon: 'pi pi-home' },
-      { label: 'Pedidos', icon: 'pi pi-shopping-bag' },
-      { label: 'Cardapio', icon: 'pi pi-list' },
-      { label: 'Clientes', icon: 'pi pi-users'},
-      {label: 'Comerciante', icon: 'pi pi pi-shop' },
-      { label: 'Financeiro', icon: 'pi pi-money-bill' },
+      { label: 'Home', icon: 'pi pi-home', command: () => router.push('/dashboard') },
+      { label: 'Pedidos', icon: 'pi pi-shopping-bag', command: () => router.push('/pedidos') },
+      { label: 'Cardapio', icon: 'pi pi-list',command: () => router.push('/cardapio') },
+      { label: 'Clientes', icon: 'pi pi-users', command: () => router.push('/clientes')},
+      {label: 'Comerciante', icon: 'pi pi pi-shop', command: () => router.push('/comerciante') },
+      { label: 'Financeiro', icon: 'pi pi-money-bill', command: () => router.push('/financeiro') },
      
     ]
   }

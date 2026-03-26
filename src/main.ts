@@ -6,6 +6,8 @@ import Aura from '@primevue/themes/aura';
 import router from './router';
 import ToastService from 'primevue/toastservice';
 import Ripple from 'primevue/ripple'; // 1. Já está importado
+import ConfirmationService from 'primevue/confirmationservice'; // Adicione esta linha
+
 
 // Componentes
 import ProgressSpinner from 'primevue/progressspinner';
@@ -16,8 +18,15 @@ import Menu from 'primevue/menu';
 import Menubar from 'primevue/menubar'; // Certifique-se de registrar o Menubar também!
 import 'primeicons/primeicons.css';
 import Chart from 'primevue/chart';
+import ToggleSwitch from 'primevue/toggleswitch';
+import Dialog from 'primevue/dialog';
+import ConfirmDialog from 'primevue/confirmdialog';
+import Toast from 'primevue/toast';
+
+
 
 const app = createApp(App);
+app.use(ConfirmationService); // Adicione esta linha
 
 // 2. REGISTRE A DIRETIVA (Isso resolve o erro "Failed to resolve directive")
 app.directive('ripple', Ripple);
@@ -27,12 +36,15 @@ app.use(ToastService);
 app.use(router);
 
 // Componentes Globais
+app.component('ConfirmDialog', ConfirmDialog);
 app.component('ProgressSpinner', ProgressSpinner);
 app.component('Avatar', Avatar);
 app.component('Badge', Badge);
 app.component('Button', Button);
 app.component('Menu', Menu);
 app.component('Menubar', Menubar);
+app.component('ToggleSwitch', ToggleSwitch);
+app.component('Dialog', Dialog);
 
 // 3. ATIVE O RIPPLE DENTRO DO USE(PRIMEVUE)
 app.use(PrimeVue, {

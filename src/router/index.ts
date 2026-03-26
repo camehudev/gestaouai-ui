@@ -4,8 +4,13 @@ import api from '@/services/api' // Sua instância do Axios
 const router = createRouter({
   history: createWebHistory(),
   routes: [
-    { path: '/login', component: () => import('@/views/LoginView.vue'), meta: { guestOnly: true } },
-    { path: '/dashboard', component: () => import('@/views/DashboardView.vue'), meta: { requiresAuth: true } },
+    { path: '/login', component: () => import('@/views/LoginView.vue'), meta: { guestOnly: true, hideMenus: true },  },
+    { path: '/dashboard', component: () => import('@/views/DashboardView.vue'), meta: { requiresAuth: true, hideMenus: true } },
+    {path: '/pedidos', component: ()=> import('@/views/PedidosView.vue'),meta: {requireAuth: true}},
+    {path: '/cardapio', component: ()=> import('@/views/CardapioView.vue'),meta: {requireAuth: true}},
+    {path: '/comerciante', component: ()=> import('@/views/ComercianteView.vue'),meta: {requireAuth: true}},
+    {path: '/clientes', component: ()=> import('@/views/ClienteView.vue'),meta: {requireAuth: true}},
+    {path: '/Financeiro', component: ()=> import('@/views/FinanceiroView.vue'),meta: {requireAuth: true}}
   ]
 })
 
