@@ -37,7 +37,12 @@
         />     
             
     </div>
+    
   </div>  
+
+  <div>
+    <Toast />
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -74,6 +79,11 @@ const handleLogin = async () => {
       email: email.value,
       password: password.value
     });
+
+    sessionStorage.setItem('empresa', data.user.empresaId);
+    sessionStorage.setItem('merchant', data.user.uaiMerchantId);
+    sessionStorage.setItem('role', data.user.role);
+    
 
     toast.add({ 
       severity: 'success', 

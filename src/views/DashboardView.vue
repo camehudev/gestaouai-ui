@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'; // <--- ESSENCIAL
 import SelectButton from 'primevue/selectbutton'
+import { uaiService } from '@/services/uaiService';
 
 // Definindo o valor inicial (deve ser um dos objetos da lista de opções)
 const opcoesPeriodo = ref([
@@ -10,6 +11,18 @@ const opcoesPeriodo = ref([
 ]);
 
 const periodoSelecionado = ref(opcoesPeriodo.value[0]); // Começa com 'Hoje'
+const tenantId = import.meta.env.VITE_TENANT_ID; // Pegando o tenantId do .env
+
+const tokenData = ref(null);
+
+const handleFetchToken = async () => {
+  try {
+        await uaiService.getTenantToken(tenantId);  
+   
+  } catch (error) {
+    console.error("Falha ao recuperar token do tenant", error);
+  }
+};
 
 
 
@@ -17,6 +30,8 @@ const chartData = ref();
 const chartOptions = ref();
 
 onMounted(() => {
+    handleFetchToken(); // Chama a função para buscar o token ao montar o componente
+
     chartData.value = {
         labels: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'],
         datasets: [

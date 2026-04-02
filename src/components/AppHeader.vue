@@ -1,26 +1,33 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { onMounted, ref} from 'vue';
 import { useRouter } from 'vue-router';
-import { useToast } from 'primevue/usetoast';
 import api from '@/services/api';
 import Menubar from 'primevue/menubar';
+import { uaiService } from '@/services/uaiService';
+import { useToast } from "primevue/usetoast";
 
-const router = useRouter();
-const toast = useToast();
-const menu = ref();
-const menuHeader = ref(false);
 
-const statusCaixa = ref(false);
 
-// Não importe o defineProps! Use-o diretamente:
+// Definindo as props com tipos
 const props = defineProps<{
-  user: {
+  empresaId: string;
+  merchantId: string;
+   user: {
     name: string;
   } | null
 }>();
 
-const user = props
+const router = useRouter();
+const toast = useToast();
+const menu = ref();
 
+const checkedStatusCaixa = ref(false);
+const checkedDelivery = ref(false);
+const checkedRetirada = ref(false);
+
+const user = props.user;
+const empresaId = sessionStorage.getItem('empresa') || '';
+const merchantId = sessionStorage.getItem('merchant') || '';
 
 // Configuração do Menu Suspenso
 const items = ref([
@@ -96,16 +103,105 @@ const menuItems = ref([
   }
 ]);
 
-const checked = ref(false);
-const aoMudarStatus = () => {
-    console.log("O novo valor é:", statusCaixa.value);
-    
-    if (!statusCaixa.value) {
-       statusCaixa.value = true;
-    } else{
-      statusCaixa.value = false;
+
+
+// const propsStatus = defineProps(['empresaId', 'merchantId']);
+const isAvailable = ref(false);
+const isLoading = ref(true);
+
+const showSuccess = () => {
+    toast.add({ severity: 'success', summary: 'Success', detail: 'Status atualizado com sucesso!', life: 1500 });
+};
+
+
+
+const buscarStatusDaAPI = async () => {
+  try {
+    const data = await uaiService.getStatus(empresaId, merchantId);  
+  
+    console.log("Status da API:", data); // Log para verificar a estrutura dos dados
+   
+    if(data[0].state){
+       checkedStatusCaixa.value = data[0].state? true : false;
+       checkedDelivery.value = data[0].state? true : false;
+       checkedRetirada.value = data[1].state != 'CLOSED' ? true : false;       
+       
+    }
+
+     if(data[1].state){
+       checkedStatusCaixa.value = data[0].state? true : false;
+       checkedDelivery.value = data[0].state? true : false;
+       checkedRetirada.value = data[1].state != 'CLOSED' ? true : false;      
+    }
+
+  } catch (error) {
+      console.error("Falha ao buscar status da API");
+  }
+};
+    setInterval(() => {
+      buscarStatusDaAPI(); // Busca o status a cada 30 segundos
+    }, 10000);  
+
+
+onMounted(async () => {
+  try {
+    buscarStatusDaAPI(); // Busca o status inicial ao montar o componente
+
+  } catch (error) {
+      console.error("Falha ao sincronizar status inicial");
+  } finally {
+     isLoading.value = false;
+  }
+});
+
+const updateToogleChek = () => {
+  checkedStatusCaixa.value = checkedStatusCaixa.value;
+  checkedDelivery.value =  checkedStatusCaixa.value;
+  checkedRetirada.value = checkedRetirada.value;
+}
+
+// Esta função é disparada sempre que o usuário clica no Toggle
+const handleDeliveryChange = async (event:any) => {
+  const empresaId = sessionStorage.getItem('empresa') || '';
+  const merchantId = sessionStorage.getItem('merchant') || ''; 
+
+  try {
+    updateToogleChek();     
+
+      // Montamos o objeto exatamente como seu backend/Prisma espera
+      const payload = {
+
+            "status": checkedStatusCaixa.value ? "AVAILABLE" : "UNAVAILABLE",
+            "operations": [
+                {
+                    "name": "DELIVERY",
+                    "status": checkedStatusCaixa.value ? "AVAILABLE" : "UNAVAILABLE",
+                    "estimatedTime": 15
+                },
+                {
+                    "name": "TAKEOUT",
+                    "status": checkedRetirada.value ? "AVAILABLE" : "UNAVAILABLE",
+                    "estimatedTime": 20
+                }
+            ]
+        
+      };     
+
+     const data = await uaiService.updateStatus(empresaId, merchantId, payload);
+
+     if(data.status === 200){      
+        showSuccess(); // Exibe o toast de sucesso
+
+     } else {
+      alert("Erro ao atualizar o status");
+     }
+
+    } catch (error) {
+      // Se der erro na API (como o "Wrong segments"), voltamos o switch para false        
+      toast.add({ severity: 'error', summary: 'Erro', detail: 'Não foi possível abrir o delivery', life: 5000 });
     }
 };
+
 
 </script>
 
@@ -123,11 +219,30 @@ const aoMudarStatus = () => {
     </template>
 
     <template #start>
-      <div style="display: flex; justify-content: end; align-items: center; width: 50vw;" class="card">
-        <ToggleSwitch v-model="checked" style="margin-right: .5rem;" @change="aoMudarStatus" />
-        <span style="color: aliceblue;" class="text-xs font-bold uppercase" >
-                {{ statusCaixa ? 'Estabelecimento aberto' : 'Estabelecimento fechado' }}
-            </span>
+      <div style="display: flex; justify-content: end; align-items: center; width: 80vw;" class="card">
+        <span style="color: aliceblue; font-size: 16px;">ESTABELECIMENTO: &nbsp; &nbsp;</span>
+       
+        <div style="display: flex; justify-content: end; align-items: center; margin-right: 1rem;">
+          <ToggleSwitch v-model="checkedStatusCaixa" style="margin-right: .5rem;" @change="handleDeliveryChange" />
+            <span style="color: aliceblue;" class="text-xs font-bold uppercase" >
+                    {{ checkedStatusCaixa ? 'Aberto' : 'Fechado' }}
+                </span>
+        </div>
+
+        <div style="display: flex; justify-content: end; align-items: center; margin-right: 1rem;"> 
+          <ToggleSwitch v-model="checkedDelivery" style="margin-right: .5rem;" @change="handleDeliveryChange" />
+          <span style="color: aliceblue;" class="text-xs font-bold uppercase" >  
+            Delivery   
+              </span>
+        </div>
+
+        <div style="display: flex; justify-content: end; align-items: center; margin-right: 1rem;"> 
+          <ToggleSwitch v-model="checkedRetirada" style="margin-right: .5rem;" @change="handleDeliveryChange" />
+         <span style="color: aliceblue;" class="text-xs font-bold uppercase" >  
+            Retirada   
+              </span>
+        </div>
+         <Toast />
       </div>
 
     </template>
@@ -137,7 +252,7 @@ const aoMudarStatus = () => {
 
           <div class="flex flex-column text-right hidden md:block avatar2">
             <span style="color: #2ecc71 ;" class="text-sm opacity-70">Olá, &nbsp;</span>
-            <span style="color: #2ecc71 ;" class="font-bold text-900">{{ user?.user?.name || 'Visitante' }}</span>
+            <span style="color: #2ecc71 ;" class="font-bold text-900">{{ user?.name || 'Visitante' }}</span>
           </div>
 
           <div class="">
@@ -159,6 +274,11 @@ const aoMudarStatus = () => {
     </template>
 </Menubar>
 </div>
+
+<div>
+  <Toast/>
+</div>
+
 </template>
 
 <style scoped>

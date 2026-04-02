@@ -35,6 +35,7 @@ app.component('Chart', Chart);
 app.use(ToastService);
 app.use(router);
 
+
 // Componentes Globais
 app.component('ConfirmDialog', ConfirmDialog);
 app.component('ProgressSpinner', ProgressSpinner);
@@ -45,6 +46,7 @@ app.component('Menu', Menu);
 app.component('Menubar', Menubar);
 app.component('ToggleSwitch', ToggleSwitch);
 app.component('Dialog', Dialog);
+app.component('Toast', Toast);
 
 // 3. ATIVE O RIPPLE DENTRO DO USE(PRIMEVUE)
 app.use(PrimeVue, {

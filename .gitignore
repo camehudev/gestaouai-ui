@@ -23,3 +23,10 @@ TestResults.xml
 
 #node-modules
 node_modules/
+
+#pasta env
+.env
+env.local
+env.development
+env.test
+env.production

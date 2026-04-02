@@ -1,17 +1,18 @@
 <script setup lang="ts">
   import { RouterView } from 'vue-router';
-  import Toast from 'primevue/toast';
   import AppHeader from './components/AppHeader.vue';
   import { computed, onMounted, ref, watch } from 'vue';
   import api from './services/api';
   import AppSidebar from './components/AppSidebar.vue';
   import { useRoute } from 'vue-router';
+
   
 
   const temToken = ref(false);  
   const route = useRoute();
   const loading = ref(true);
-  let userData = ref(null);
+  let userData = ref(null); 
+
 
     const verificarSessao = async () => {
     try {
