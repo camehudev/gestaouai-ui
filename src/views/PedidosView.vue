@@ -1,28 +1,60 @@
 <template>
+  <div v-if="showMessage" class="card">
+        <Message size="large"  severity="error" class="msg-pulsante"> 
+        <i class="pi pi-shopping-cart" style="font-size: 2rem">&nbsp; Oba! Você tem um novo pedido!</i>
+           </Message> 
+            
+  </div>
+
   <div class="pedidos-container p-4">
     <div class="flex justify-content-between align-items-center mb-4">
-      <h1 class="text-2xl font-bold text-900 m-0">Painel de Pedidos</h1>
-      <!-- <Button label="Novo Pedido" icon="pi pi-plus" class="p-button-success" /> -->
-    </div>
+      <h1 class="text-2xl font-bold text-900 m-0">Painel de Pedidos</h1>   
+     </div>
+     <div>
+      <audio id="meuSom">
+        <source src="../assets/sounds/notificacao.mp3" type="audio/mpeg">
+      </audio>
+     </div>   
 
-    <div class="kanban-wrapper flex gap-3">
-      
+    <div class="kanban-wrapper flex">      
       <div class="kanban-col flex-1">
         <div class="kanban-header novo">
           <span class="font-bold">NOVO PEDIDO</span>
-          <Badge value="3" severity="info"></Badge>
+          <Badge :value="pedidosRecebidos" severity="info"></Badge>
         </div>
-        <div class="kanban-content flex flex-column gap-3">
-          <div class="pedido-card shadow-1">
-            <div class="flex justify-content-between mb-2">
-              <span class="font-bold">#1025</span>
-              <span class="text-sm text-500">10:30</span>
+       <div class="kanban-content flex flex-column">
+            <div 
+              v-for="pedido in novosPedidos" 
+              :key="pedido.id" 
+              class="pedido-card shadow-1"
+            >
+              <div class="flex flex-column mb-2">
+                <span class="font-bold mb-1"><strong>Pedido: {{ pedido.id }}</strong></span><br>
+                <span class="text-sm text-500 mb-1"><strong>Data: &nbsp;</strong>{{ formatarDataBR(pedido.createdAt) }} as {{formatarHoraBR(pedido.createdAt) }}</span>
+              </div>
+              
+              <!-- <div class="text-sm font-medium mb-2"><strong>Cliente:</strong> {{ pedido.customer.name }}</div> -->
+              
+              <!-- <div class="text-xs text-600 mb-3">
+                {{ pedido.itensResumo }}
+              </div> -->
+
+              <div style="margin-top: 1rem;">
+                <Button 
+                  label="Ver detalhes" 
+                  class="p-button-sm w-full" 
+                  @click="abrirDetalhes(pedido)" 
+                />
+                
+              </div>              
+              
             </div>
-            <div class="text-sm font-medium mb-2">João Silva</div>
-            <div class="text-xs text-600 mb-3">1x Pizza Calabresa, 1x Coca-Cola</div>
-            <div style="margin-top: 1rem;"><Button label="Ver detalhes" icon="" class="p-button-sm p-mt-6 w-full" @click="openPosition('top')" /></div>
           </div>
-        </div>
+          <div v-if="nenhumPedido" class="flex flex-column align-items-center gap-3 mt-5" style="padding-bottom: 2rem;">
+            <i class="pi pi-info-circle text-4xl text-500"></i>
+            <span class="text-lg text-500 ">&nbsp; Nenhum pedido novo no momento.</span>   
+                 
+          </div>
       </div>
 
       <div class="kanban-col flex-1">
@@ -92,40 +124,188 @@
     </div>
   </div>
 
-  <div class="card flex justify-center">
-        <Button label="Show" @click="visible = true" />
-        <Dialog v-model:visible="visible" modal header="Detalhes do Pedido: " :style="{ width: '50vw' }" :breakpoints="{ '1199px': '30vw', '575px': '50vw' }">
-            <p class="m-0">
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
-                Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-            </p>
-
-            <footer style="display: flex; justify-content: center;">
-              <Button style="margin: .5rem;" label="Rejeitar" severity="secondary" @click="confirm2()" />              
-              <Button style="margin: .5rem;" label="Aceitar" severity="success" />
-            </footer>            
-        </Dialog>
-
-        
-    </div>   
-
       <Toast />
       <ConfirmDialog></ConfirmDialog>
+
+      <div class="card flex justify-center">        
+                <Dialog v-model:visible="visibleDialogPedidos" modal header="Detalhes do Pedido:" :style="{ width: '50vw' }" :breakpoints="{ '1199px': '30vw', '575px': '50vw' }">
+                    <p class="m-0">
+                      <span><strong>Pedido:</strong> {{ pedidoSelecionado }}</span> <br>
+                        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+                        Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+                    
+                      </p>
+
+                    <footer style="display: flex; justify-content: center;">
+                      <Button style="margin: .5rem;" label="Rejeitar" severity="secondary" @click="getConfirmPedidos(pedidoSelecionado)" />              
+                      <Button style="margin: .5rem;" label="Aceitar" severity="success" @click="getConfirmPedidos(pedidoSelecionado)" />
+                    </footer>            
+                </Dialog>        
+              </div> 
+     
     </template> 
 
 <script setup>
-import { ref } from "vue";
+import { ref, onMounted, watch ,onBeforeUnmount} from "vue";
 import { useConfirm } from "primevue/useconfirm";
 import { useToast } from 'primevue/usetoast';
+import { pedidoService } from '@/services/pedidoService';
+
 // Importações de componentes para garantir que o script os reconheça se não forem globais
 import ConfirmDialog from 'primevue/confirmdialog'; 
 import Toast from 'primevue/toast';
+import { Pedido } from '../../../API/src/core/entities/Pedidos';
+import { uaiService } from "@/services/uaiService";
 
 const confirm = useConfirm();
 const toast = useToast();
+const pedidosRecebidos = ref(0);
+const showMessage = ref(false);
+const visibleDialogPedidos = ref(false);
+const nenhumPedido = ref(false);
+const idPedido = ref(null);
+const idPedidoAck = ref(null);
 
 const visible = ref(false);
 const  visiblePedidoPronto = ref(false);
+const pedidoSelecionado = ref(null); // Variável para guardar o pedido clicado
+
+const pedidos = ref([]);
+const novosPedidos = ref([]);
+const isLoading = ref(true);
+const { showToast } = useToast();
+
+// Começa como 'true' por padrão
+const isSoundEnabled = ref(true);
+
+let intervalId = null;
+
+const getConfirmPedidos = async (idPedido) => {
+  const tenantId = sessionStorage.getItem('empresaId');
+  
+  // Transformamos o ID único em um Array, pois a API da UaiRango espera uma lista
+  const payload = [idPedido]; 
+
+  try {
+    // Agora o uaiService.confirmarProcessamentoPelaRota EXISTE!
+    const data = await uaiService.confirmarProcessamentoPelaRota(tenantId, payload);
+   
+    if (data.sucesso) {
+      toast.add({ severity: 'success', summary: 'Sucesso', detail: data.mensagem, life: 3000 });
+      visibleDialogPedidos.value = false;
+      
+      // RECARREGA A LISTA: Importantíssimo para o pedido sair da coluna "Novo"
+      await carregarPedidos(); 
+    }
+  } catch (error) {
+    console.error("Erro ao confirmar:", error);
+    toast.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao comunicar com o servidor.', life: 3000 });
+  }
+};
+
+const abrirDetalhes = (pedido) => {
+  visibleDialogPedidos.value = true; // Fecha o modal antes de abrir um novo, se já estiver aberto 
+  pedidoSelecionado.value = pedido.id; // Salva o pedido clicado  
+  };
+
+const formatarDataBR = (dataISO) => {
+  if (!dataISO) return '';
+  const data = new Date(dataISO);
+  // Usamos as partes UTC para montar a string manualmente
+  const dia = String(data.getUTCDate()).padStart(2, '0');
+  const mes = String(data.getUTCMonth() + 1).padStart(2, '0');
+  const ano = data.getUTCFullYear();
+  return `${dia}/${mes}/${ano}`;
+};
+
+const formatarHoraBR = (dataISO) => {
+  if (!dataISO) return '';
+  const data = new Date(dataISO);
+  // Pega a hora e minuto sem aplicar o fuso horário local
+  const hora = String(data.getUTCHours()).padStart(2, '0');
+  const minutos = String(data.getUTCMinutes()).padStart(2, '0');
+  return `${hora}:${minutos}`;
+};
+
+const toggleSound = () => {
+  isSoundEnabled.value = !isSoundEnabled.value;
+  
+};
+
+// Monitora a lista de pedidos
+watch(pedidos, (newRows, oldRows) => {
+  // Se o número de pedidos aumentou, avisamos!
+  if (newRows.length > oldRows.length && oldRows.length > 0) {
+    playNotificationSound();   
+    toast.add({ severity: 'info', summary: 'Novo Pedido', detail: 'Oba! Um novo pedido foi recebido.', life: 3000 });
+  }
+}, { deep: true });
+
+
+const playNotificationSound = () => {  
+
+  try {
+ 
+     const audio = document.getElementById('meuSom');
+     audio.play();
+
+    console.log("Som tocado com sucesso!");
+    
+  } catch (error) {
+    console.warn("Áudio bloqueado ou erro na reprodução:", error.message);
+  }
+};
+
+const carregarPedidos = async () => {
+  const tenantId = sessionStorage.getItem('empresaId');
+
+  try {
+    const data = await pedidoService.getPedidosByTenant(tenantId); 
+    idPedido.value = data?.pedidos?.[0]?.id || null; // Atualiza o ID do pedido para o mais recente ou null se não houver pedidos  
+    novosPedidos.value = data?.pedidos || [];
+   
+    if(!data?.pedidos){
+      showMessage.value = false;
+    } 
+    
+    if(data.recebidos >= 1){
+      pedidosRecebidos.value = data.pedidos.length || 0; // Garante que seja 0 se vier null/undefined
+      showMessage.value = true;
+      playNotificationSound();
+     
+    } else {
+      showMessage.value = false;
+      nenhumPedido.value = true;
+    }       
+
+  } catch (error) {
+    console.error(error);
+    toast.add({ 
+      severity: 'error', 
+      summary: 'Erro', 
+      detail: `Falha ao sincronizar pedidos. - ${error.message}`, 
+      life: 3000 
+    });
+  } 
+};
+// Limpar o intervalo quando sair da página para não gastar memória
+onBeforeUnmount(() => {
+  if (intervalId) {
+    clearInterval(intervalId);
+  }
+});
+
+ // Executa assim que o componente é montado no DOM
+onMounted(() => {
+  // 1. Executa a primeira carga assim que abrir a tela
+  carregarPedidos();
+
+  // 2. Configura o intervalo para repetir a carga
+  // Note que o "intervalId =" está dentro da função agora
+  intervalId = setInterval(() => {
+       carregarPedidos();
+  }, 30000);
+});
 
 const confirm1 = () => {    
     confirm.require({
@@ -226,7 +406,7 @@ const pedidoEntregue = (pos) => {
 <style scoped>
 .kanban-wrapper {
   display: flex;
-  justify-content: center;
+  /* justify-content: center; */
   align-items: flex-start;
   min-height: calc(100vh - 150px);
   /* Permite scroll horizontal se as colunas não couberem */
@@ -284,6 +464,27 @@ const pedidoEntregue = (pos) => {
 :deep(.p-button-sm) {
   font-size: 0.8rem;
   padding: 0.4rem;
+}
+
+/* Definindo a animação */
+@keyframes pulsar {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(236, 96, 108, 0.4); /* Cor opcional para o brilho */
+  }
+  70% {
+    transform: scale(1.02);
+      box-shadow: 0 0 0 0 rgba(236, 96, 108, 0.4); /* Cor opcional para o brilho */
+  }
+  100% {
+    transform: scale(1);
+      box-shadow: 0 0 0 0 rgba(236, 96, 108, 0.4); /* Cor opcional para o brilho */
+  }
+}
+
+/* Criando a classe que aplica a animação */
+.msg-pulsante {
+  animation: pulsar 1s infinite ease-in-out;
 }
 
 @media(max-width:868px){

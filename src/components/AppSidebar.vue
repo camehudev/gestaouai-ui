@@ -48,7 +48,7 @@ const items = ref([
 :deep(.p-menu) {
     background: transparent !important;
     border: none;
-    padding-top: 1.5rem;
+    padding-top: 8.5rem;
 }
 
 /* 3. Estilizar o Link (A mágica acontece aqui) */
@@ -82,6 +82,17 @@ const items = ref([
 /* Garante que o ícone mude de cor ou brilhe no hover */
 :deep(.menu-link-uai:hover span[class^="pi"]) {
     color: #ffffff !important;
+}
+
+:deep(.p-menu-list) {
+    margin: 0;
+    /* padding: 1.5rem; */
+    outline: 0 none;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: var(--p-menu-list-gap);
+    
 }
 
 </style>

@@ -22,6 +22,9 @@ import ToggleSwitch from 'primevue/toggleswitch';
 import Dialog from 'primevue/dialog';
 import ConfirmDialog from 'primevue/confirmdialog';
 import Toast from 'primevue/toast';
+import Message from 'primevue/message';
+
+
 
 
 
@@ -47,6 +50,7 @@ app.component('Menubar', Menubar);
 app.component('ToggleSwitch', ToggleSwitch);
 app.component('Dialog', Dialog);
 app.component('Toast', Toast);
+app.component('Message', Message);
 
 // 3. ATIVE O RIPPLE DENTRO DO USE(PRIMEVUE)
 app.use(PrimeVue, {

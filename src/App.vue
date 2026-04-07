@@ -5,6 +5,7 @@
   import api from './services/api';
   import AppSidebar from './components/AppSidebar.vue';
   import { useRoute } from 'vue-router';
+  import { useToast } from 'primevue/usetoast';
 
   
 
@@ -12,19 +13,22 @@
   const route = useRoute();
   const loading = ref(true);
   let userData = ref(null); 
+  const toast = useToast();
 
 
     const verificarSessao = async () => {
     try {
       // Se a API /me responder 200, significa que o cookie é válido
-      const { data } = await api.get('/me', { withCredentials: true });
+      const { data } = await api.get('/me', { withCredentials: true });  
       userData.value = data.user || data;
       temToken.value = true; // Mostra os menus
-    } catch (error) {
-      // Se der 401 ou erro, escondemos os menus
-      temToken.value = false;
-      userData.value = null;
-      console.error("Sessão inválida ou expirada");
+
+    } catch (error) {      
+
+        temToken.value = false;
+        userData.value = null;      
+        toast.add({ severity: 'info', summary: 'Info', detail: 'Sessão expirada. È necessário logar novamente.', life: 3500 });
+
     } finally {
       loading.value = false;
     }

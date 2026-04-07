@@ -54,6 +54,7 @@ import Password from 'primevue/password';
 import api from '@/services/api'; // Importa a nossa config
 import { useToast } from 'primevue/usetoast'; // 1. Importe o hook
 import { useRouter } from 'vue-router';
+import { sessionManager } from '@/utils/session';
 
 const email = ref('');
 const password = ref('');
@@ -62,7 +63,7 @@ const toast = useToast(); // 2. Inicialize a constante toast
 const router = useRouter();
 
 const handleLogin = async () => {
-  console.log(email.value)
+
   if (!email.value || !password.value){
      return toast.add({ 
       severity: 'error', 
@@ -80,10 +81,7 @@ const handleLogin = async () => {
       password: password.value
     });
 
-    sessionStorage.setItem('empresa', data.user.empresaId);
-    sessionStorage.setItem('merchant', data.user.uaiMerchantId);
-    sessionStorage.setItem('role', data.user.role);
-    
+     sessionManager.setUserData(data.user.empresaId, data.user.uaiMerchantId, data.user.role);
 
     toast.add({ 
       severity: 'success', 

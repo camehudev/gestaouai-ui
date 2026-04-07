@@ -10,11 +10,11 @@ import { useToast } from "primevue/usetoast";
 
 // Definindo as props com tipos
 const props = defineProps<{
-  empresaId: string;
-  merchantId: string;
+  empresaId?: string;
+  merchantId?: string;
    user: {
     name: string;
-  } | null
+  } | null;
 }>();
 
 const router = useRouter();
@@ -26,8 +26,12 @@ const checkedDelivery = ref(false);
 const checkedRetirada = ref(false);
 
 const user = props.user;
-const empresaId = sessionStorage.getItem('empresa') || '';
-const merchantId = sessionStorage.getItem('merchant') || '';
+const empresaId = sessionStorage.getItem('empresaId') || '';
+const merchantId = sessionStorage.getItem('merchantId') || '';
+
+onMounted(async () => { 
+   buscarStatusDaAPI(); // Busca o status inicial ao montar o componente
+});
 
 // Configuração do Menu Suspenso
 const items = ref([
@@ -65,10 +69,11 @@ const handleLogout = async () => {
     })
     
     
-  } catch (error) {
+  } catch (error:any) {
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Erro ao deslogar:', life: 1500 });
     console.error('Erro ao deslogar:', error);
     // Mesmo que a API falhe, é prudente mandar o usuário pro login
-    // router.push('/login');
+    router.push('/login');
   }
 };
 
@@ -96,9 +101,7 @@ const menuItems = ref([
     icon: 'pi pi-sign-out',
     class: 'text-red-500', // Deixa o texto vermelho (se usar PrimeFlex)
     command: async () => {
-        handleLogout();
-    //   await api.post('/logout');
-    //   router.push('/login');
+        handleLogout();   
     }
   }
 ]);
@@ -117,9 +120,7 @@ const showSuccess = () => {
 
 const buscarStatusDaAPI = async () => {
   try {
-    const data = await uaiService.getStatus(empresaId, merchantId);  
-  
-    console.log("Status da API:", data); // Log para verificar a estrutura dos dados
+    const data = await uaiService.getStatus(empresaId, merchantId);    
    
     if(data[0].state){
        checkedStatusCaixa.value = data[0].state? true : false;
@@ -135,38 +136,24 @@ const buscarStatusDaAPI = async () => {
     }
 
   } catch (error) {
-      console.error("Falha ao buscar status da API");
+    
+    checkedStatusCaixa.value = false;
+    checkedDelivery.value = false;
+      ''
   }
 };
-    setInterval(() => {
-      buscarStatusDaAPI(); // Busca o status a cada 30 segundos
-    }, 10000);  
+    // setInterval(() => {
+    //   buscarStatusDaAPI(); // Busca o status a cada 30 segundos
+    // }, 10000);  
 
 
-onMounted(async () => {
-  try {
-    buscarStatusDaAPI(); // Busca o status inicial ao montar o componente
-
-  } catch (error) {
-      console.error("Falha ao sincronizar status inicial");
-  } finally {
-     isLoading.value = false;
-  }
-});
 
 const updateToogleChek = () => {
-  checkedStatusCaixa.value = checkedStatusCaixa.value;
-  checkedDelivery.value =  checkedStatusCaixa.value;
-  checkedRetirada.value = checkedRetirada.value;
+  
 }
 
-// Esta função é disparada sempre que o usuário clica no Toggle
-const handleDeliveryChange = async (event:any) => {
-  const empresaId = sessionStorage.getItem('empresa') || '';
-  const merchantId = sessionStorage.getItem('merchant') || ''; 
-
+const upStatus= async (event:any) => {
   try {
-    updateToogleChek();     
 
       // Montamos o objeto exatamente como seu backend/Prisma espera
       const payload = {
@@ -191,10 +178,28 @@ const handleDeliveryChange = async (event:any) => {
 
      if(data.status === 200){      
         showSuccess(); // Exibe o toast de sucesso
+        setTimeout(() => {
+          router.go(0); // Recarrega a página para refletir as mudanças
+        }, 1000); // Aguarda o toast desaparecer antes de recarregar
 
      } else {
-      alert("Erro ao atualizar o status");
+       alert("Erro ao atualizar o status");
      }
+    
+  } catch (error) {
+    
+  }
+}
+
+// Esta função é disparada sempre que o usuário clica no Toggle
+const handleDeliveryChange = async (event:any) => {  
+
+  try {  
+
+      await upStatus(event); // Tenta atualizar o status na API
+        setTimeout(() => {
+          router.go(0); // Recarrega a página para refletir as mudanças
+        }, 1000); // Aguarda o toast desaparecer antes de recarregar
 
     } catch (error) {
       // Se der erro na API (como o "Wrong segments"), voltamos o switch para false        

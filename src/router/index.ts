@@ -15,30 +15,38 @@ const router = createRouter({
 })
 
 router.beforeEach(async (to, from, next) => {
-  // 1. Se a rota não precisa de autenticação NEM é exclusiva para visitas, passa direto
+  // 1. Rota pública e que não é restrita a visitantes? Passa direto.
   if (!to.meta.requiresAuth && !to.meta.guestOnly) {
     return next();
   }
 
   try {
-    // 2. Tenta validar o usuário
+    // 2. Valida a sessão no Backend
+    // Se o cookie de 6 horas expirou, esta chamada retornará erro (401)
     await api.get('/me');
     
-    // Se funcionou e ele está tentando ir para o Login, manda pro Dashboard
+    // Se o usuário está logado e tenta ir para o Login, manda para o Dashboard/Pedidos
     if (to.meta.guestOnly) {
-      return next('/dashboard');
+      return next('/pedidos'); // Mudei para /pedidos pois parece ser sua tela principal
     }
-    next(); // Se ia pro Dashboard e está logado, segue viagem
     
-  } catch (error) {
-    // 3. Se deu erro (Cookie excluído ou expirado)
+    next(); 
     
-    // Se a rota que ele quer EXIGE auth, manda pro login
+  } 
+  catch (error) {
+    // 3. O Cookie expirou ou o usuário não está autenticado
+    
+    // Limpa os dados de sessão para não sobrar "lixo" no navegador
+    sessionStorage.clear(); 
+    localStorage.removeItem('user'); // Se você usar localStorage também
+
+    // Se a rota exige login, redireciona
     if (to.meta.requiresAuth) {
+      // Opcional: Adicionar um alerta ou toast informando "Sessão expirada"
       return next('/login');
     }
     
-    // Se ele já estava indo pro login e deu erro no /me, deixa ele ir pro login!
+    // Se era guestOnly (como o próprio Login), permite o acesso
     next(); 
   }
 });

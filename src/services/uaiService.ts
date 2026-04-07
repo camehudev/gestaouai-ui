@@ -1,3 +1,4 @@
+import axios from 'axios';
 import api from './api'; // Seu axios configurado
  
 export const uaiService = {
@@ -12,8 +13,7 @@ export const uaiService = {
         }
       });
       return response.data;
-    } catch (error: any) {
-      console.error(`Erro ao buscar token para o tenant ${tenantId}:`, error.message);
+    } catch (error: any) {     
       throw error; // Repassa o erro para o componente tratar (ex: mostrar Toast)
     }
   },
@@ -35,9 +35,21 @@ export const uaiService = {
     const response = await api.get(`/${empresaId}/status/${merchantId}`, {
        headers: {                 
         'Content-Type': 'application/json', 
-        'x-api-key': import.meta.env.VITE_UAIRANGO_API_KEY || ''       
+        // 'x-api-key': import.meta.env.VITE_UAIRANGO_API_KEY || ''       
       }
   });
+    return response.data;
+  },
+
+  async confirmarProcessamentoPelaRota(tenantId:string, eventIds: string[]) {
+    // Note: eventIds deve ser um array ["id_do_pedido"]
+    const response = await axios.post(`http://localhost:3000/pedidos/confirmar/${tenantId}`, {
+      eventIds: eventIds,
+        headers: {                 
+        'Content-Type': 'application/json', 
+        'x-api-key': import.meta.env.VITE_UAIRANGO_API_KEY || ''       
+      }
+    });
     return response.data;
   }
 };
