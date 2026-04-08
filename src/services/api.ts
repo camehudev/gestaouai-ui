@@ -1,5 +1,9 @@
 import axios from 'axios';
 import router from '@/router'; // Importe o seu router para redirecionar
+import { ref } from 'vue';
+
+// Estado global do loading
+export const loadingCount = ref(0);
 
 const api = axios.create({
   baseURL: 'http://localhost:3000',
@@ -9,27 +13,38 @@ const api = axios.create({
   }
 });
 
-// Interceptor de Requisição (Geralmente usado para Logs ou Tokens de Header)
-api.interceptors.request.use(config => {  
+// // Interceptor de Requisição (Geralmente usado para Logs ou Tokens de Header)
+// api.interceptors.request.use(config => {  
+//   return config;
+// });
+
+// --- INTERCEPTOR DE REQUISIÇÃO ---
+api.interceptors.request.use((config) => {
+  loadingCount.value++; // Adiciona uma requisição ativa
   return config;
+
+}, (error) => {
+  loadingCount.value--; // Remove se a requisição nem chegou a sair
+  return Promise.reject(error);
 });
 
-// NOVO: Interceptor de Resposta (Para capturar a expiração do Cookie)
+// --- INTERCEPTOR DE RESPOSTA ---
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    loadingCount.value = Math.max(0, loadingCount.value - 1); // Subtrai uma concluída
+    return response;
+  },
   (error) => {
-    // 1. Verificamos se o erro é 401
+    loadingCount.value = Math.max(0, loadingCount.value - 1); // Subtrai mesmo se der erro
+
+    // --- Sua lógica de 401 existente ---
     if (error.response && error.response.status === 401) {
-      
-      // 2. A MÁGICA: Só redireciona se NÃO estivermos no login
-      // Isso evita que o erro 401 na tela de login cause um refresh infinito
       if (!window.location.pathname.includes('/login')) {
         console.warn("Sessão expirada. Redirecionando para o login...");
         
         sessionStorage.clear();
         localStorage.clear();
 
-        // Redireciona de forma limpa
         window.location.href = '/login';
       }
     }

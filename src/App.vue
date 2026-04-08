@@ -2,7 +2,7 @@
   import { RouterView } from 'vue-router';
   import AppHeader from './components/AppHeader.vue';
   import { computed, onMounted, ref, watch } from 'vue';
-  import api from './services/api';
+  import api, { loadingCount } from './services/api';
   import AppSidebar from './components/AppSidebar.vue';
   import { useRoute } from 'vue-router';
   import { useToast } from 'primevue/usetoast';
@@ -65,11 +65,48 @@
   <AppHeader v-if="temToken" :user="userData" class="layout-header" />
   <AppSidebar v-if="temToken" class="layout-sidebar" />
 
-  <div :class="temToken ? 'layout-content-logado' : 'layout-content-deslogado '">
-        <router-view /> 
+  <div v-if="loadingCount > 0" style="
+      position: fixed; 
+      top: 0; 
+      left: 0; 
+      width: 100vw; 
+      height: 100vh; 
+      background: rgba(0, 0, 0, 0.5); 
+      display: flex; 
+      justify-content: center; 
+      align-items: center; 
+      z-index: 999999;
+      color: white;
+      /* backdrop-filter: blur(8px); */
+    ">
+    <div style="text-align: center;">
+       <div class="spinner"></div>
+       <div style="font-size: 24px; margin-top: 10px; font-family: sans-serif;">Carregando...</div>
+    </div>
   </div>
 
+  <div :class="temToken ? 'layout-content-logado' : 'layout-content-deslogado'">
+    <router-view />         
+  </div>
 </template>
+
+<style scoped>
+/* Adicione esse spinner para ficar mais profissional */
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 5px solid #f3f3f3;
+  border-top: 5px solid;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+</style>
 
 
 

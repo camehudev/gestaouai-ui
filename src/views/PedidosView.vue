@@ -29,7 +29,7 @@
               class="pedido-card shadow-1"
             >
               <div class="flex flex-column mb-2">
-                <span class="font-bold mb-1"><strong>Pedido: {{ pedido.id }}</strong></span><br>
+                <span class="font-bold mb-1"><strong>Pedido: {{ pedido.displayId }}</strong></span><br>
                 <span class="text-sm text-500 mb-1"><strong>Data: &nbsp;</strong>{{ formatarDataBR(pedido.createdAt) }} as {{formatarHoraBR(pedido.createdAt) }}</span>
               </div>
               
@@ -128,16 +128,108 @@
       <ConfirmDialog></ConfirmDialog>
 
       <div class="card flex justify-center">        
-                <Dialog v-model:visible="visibleDialogPedidos" modal header="Detalhes do Pedido:" :style="{ width: '50vw' }" :breakpoints="{ '1199px': '30vw', '575px': '50vw' }">
-                    <p class="m-0">
-                      <span><strong>Pedido:</strong> {{ pedidoSelecionado }}</span> <br>
+                <Dialog v-model:visible="visibleDialogPedidos" modal header="Detalhes do Pedido" :style="{ width: '50vw' }" :breakpoints="{ '1199px': '30vw', '575px': '50vw' }">
+                    <!-- <p class="m-0">
+                      <span><strong>Pedido:</strong> #{{ pedidoSelecionado }}</span> <br>
                         Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
                         Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
                     
-                      </p>
+                      </p> -->
+                      <div><strong>Pedido:</strong><span> &nbsp;#{{pedidoSelecionado}}</span></div>
+                      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; margin-bottom: 1.5rem;">                      
+                        <div class="bg-blue-500 p-4"> 
+                          <span><Badge :value="detalhesDoPedido?.orderType=== 'TAKEOUT'?'RETIRADA':'DELIVERY'" severity="info"></Badge></span>&nbsp;
+                          <span>{{ formatarDataBR(detalhesDoPedido?.createdAt) }} - {{ formatarHoraBR(detalhesDoPedido?.createdAt) }} </span>
+                         
+                        </div>
+                        <div class="bg-red-500 p-4">
+                          <Button icon="pi pi-print" severity="secondary" outlined />
+                        </div>                                               
+                      </div>
+
+                      <div style="border: 1px; border: 1px solid; border-radius: 5px; padding:1rem;"> 
+                        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid; padding-bottom: 1rem; margin-bottom: 1.5rem;">
+                          <div class="font-bold">Descrição</div>
+                          <div>qtd</div>
+                          <div class="font-bold">Itens</div>
+                        </div>                       
+
+                        <div >
+                          <div v-for="item in detalhesDoPedido?.itens" :key="item.id">
+                              <!-- DESCRIÇÃO -->
+                              <div style="display: flex; justify-content: space-between;">
+                                  <div style="margin-left: 0; width: 35%;">
+                                    <span>{{ item?.name }}</span><br>
+                                    <span style="font-size: 12px;">{{ item?.description }}</span><br>
+                                    <span style="font-size: 14px;" >{{item?.options?.[0].name}}</span>
+                                  </div> 
+                              
+                              <!-- QUANTIDADE -->
+                              <div style="text-align: center; width: 30%;">
+                                
+                                  {{ item?.quantity }}
+                               
+                              </div>
+
+                              <div style="text-align: end; width: 30%;">
+                               
+                                  {{ item?.options?.[0]?.price?.toLocaleString('pt-br', { style: 'currency', currency: 'BRL' }) }}
+                                
+                              </div>                            
+                            
+                            </div>                             
+                                
+                            </div>                         
+                            
+                        </div>
+                        </div>
+                  
+                       <!-- METODOS DE PAGAMENTO -->
+
+                       <div style="border-radius: 5px; border: 1px solid; margin-top: 1rem; padding: 1rem;">
+                          <div style=" display: flex; justify-content: space-between;" v-for="pagamento in detalhesDoPedido?.payments?.methods " >                          
+                            <div style="margin-bottom: 5px;">Forma de pagamento:</div>
+                            <div>{{ traduzirMetodoPagamento(pagamento?.method)}}</div>                       
+                          </div> 
+
+                          <div v-for="pagamento in detalhesDoPedido?.payments?.methods " >  
+                            <div v-if="pagamento?.method === 'CASH'" style="display: flex; justify-content: space-between; margin-bottom: 1px;">                        
+                              <div >Precisa de troco:</div>
+                              <div>{{ pagamento.card?.brand ? pagamento.card?.brand?.toLocaleString('pt-br', { style: 'currency', currency: 'BRL' }) : 'R$ 0.00' }}</div> 
+                            </div> 
+                            
+
+                                         
+                          </div> 
+                        </div>
+
+                      <div style="border-radius: 5px; border: 1px solid; margin-top: 1rem; padding: 1rem;">
+                                                                       
+                        <div style="display: flex; justify-content: space-between; margin-top: 3px;">
+                            <div>SubTotal: </div>
+                            <div>{{ detalhesDoPedido?.total?.subTotal?.toLocaleString('pt-br', { style: 'currency', currency: 'BRL' })}} </div>
+                          </div>
+
+                          <div style="display: flex; justify-content: space-between; margin-top: 3px;">
+                            <div>Taxa de entrega: </div>
+                            <div>{{ detalhesDoPedido?.total?.deliveryFee?.toLocaleString('pt-br', { style: 'currency', currency: 'BRL' }) }} </div>
+                          </div>
+
+                          <div style="display: flex; justify-content: space-between; margin-top: 1rem;">
+                            <div>Total: </div>
+                            <div>{{ detalhesDoPedido?.total?.orderAmount?.toLocaleString('pt-br', { style: 'currency', currency: 'BRL' }) }}</div>
+                          </div>
+                      </div>
+
+                       <!-- DADOS DO CLIETNE -->
+                      <div style="border-radius: 5px; border: 1px solid; margin-top: 1rem; padding: 1rem;">
+                        <div>Cliente:&nbsp;{{ detalhesDoPedido?.customer?.name }}</div><br>
+                        <div style="margin-top: 1px;">Telefone:&nbsp;{{ detalhesDoPedido?.customer?.phone?.number }}</div>
+                       
+                      </div>
 
                     <footer style="display: flex; justify-content: center;">
-                      <Button style="margin: .5rem;" label="Rejeitar" severity="secondary" @click="getConfirmPedidos(pedidoSelecionado)" />              
+                      <Button style="margin: .5rem;" label="Rejeitar" severity="secondary" @click="getConfirmPedidos(idDoPedido.value)" />              
                       <Button style="margin: .5rem;" label="Aceitar" severity="success" @click="getConfirmPedidos(pedidoSelecionado)" />
                     </footer>            
                 </Dialog>        
@@ -156,6 +248,7 @@ import ConfirmDialog from 'primevue/confirmdialog';
 import Toast from 'primevue/toast';
 import { Pedido } from '../../../API/src/core/entities/Pedidos';
 import { uaiService } from "@/services/uaiService";
+import { Pagamento } from '../../../API/src/core/entities/Pagamentos';
 
 const confirm = useConfirm();
 const toast = useToast();
@@ -164,11 +257,15 @@ const showMessage = ref(false);
 const visibleDialogPedidos = ref(false);
 const nenhumPedido = ref(false);
 const idPedido = ref(null);
+const idDoPedido = ref(null);
 const idPedidoAck = ref(null);
+const numPedidoDisplay= ref(null);
+const detalhesDoPedido=ref({})
 
 const visible = ref(false);
 const  visiblePedidoPronto = ref(false);
 const pedidoSelecionado = ref(null); // Variável para guardar o pedido clicado
+const typeFPayments = ref(['Dinheiro', 'Cartão de Credito', 'Cartão de Debito', 'Pagamento Online'])
 
 const pedidos = ref([]);
 const novosPedidos = ref([]);
@@ -180,11 +277,61 @@ const isSoundEnabled = ref(true);
 
 let intervalId = null;
 
+
+const carregarDetalhesDoPedido = async (idPedido) => {
+  try {
+   
+    // Chamada ao novo serviço
+    const dadosCompletos = await pedidoService.buscarDetalhesUaiRango(idPedido);  
+    const dadosPedidos={
+      createdAt:dadosCompletos?.createdAt,
+      orderType: dadosCompletos?.orderType,
+      itens:dadosCompletos?.items,
+      payments:dadosCompletos?.payments, 
+      total:dadosCompletos?.total,
+      customer:dadosCompletos?.customer, 
+    }
+
+    detalhesDoPedido.value = dadosPedidos;
+   
+    pedidoSelecionado.value = dadosCompletos.displayId; // Salva o pedido clicado       
+    console.log(dadosCompletos?.total)
+    
+
+  } catch (error) {
+
+    toast.add({ severity: 'error', summary: 'Erro', detail: 'Não foi possível carregar os detalhes do pedido.', life: 3000 });
+
+  }
+  
+}
+
+const traduzirMetodoPagamento = (method) => {
+  switch (method) {
+    case 'CASH':
+      return 'Dinheiro';
+    case 'CARD':
+      return 'Cartão na Entrega';
+    case 'ONLINE':
+      return 'Pago pelo App';
+    case 'PIX':
+      return 'Pix';
+    case 'DEBIT_CARD':
+      return 'Cartão de Débito';
+    case 'CREDIT_CARD':
+      return 'Cartão de Crédito';
+      
+    default:
+      return method; // Caso venha algo novo, ele mostra o código original
+  }
+};
+
+
 const getConfirmPedidos = async (idPedido) => {
-  const tenantId = sessionStorage.getItem('empresaId');
+ const tenantId = sessionStorage.getItem('empresaId');
   
   // Transformamos o ID único em um Array, pois a API da UaiRango espera uma lista
-  const payload = [idPedido]; 
+  const payload = [idDoPedido.value]; 
 
   try {
     // Agora o uaiService.confirmarProcessamentoPelaRota EXISTE!
@@ -192,7 +339,7 @@ const getConfirmPedidos = async (idPedido) => {
    
     if (data.sucesso) {
       toast.add({ severity: 'success', summary: 'Sucesso', detail: data.mensagem, life: 3000 });
-      visibleDialogPedidos.value = false;
+      visibleDialogPedidos.value = false;    
       
       // RECARREGA A LISTA: Importantíssimo para o pedido sair da coluna "Novo"
       await carregarPedidos(); 
@@ -204,8 +351,10 @@ const getConfirmPedidos = async (idPedido) => {
 };
 
 const abrirDetalhes = (pedido) => {
-  visibleDialogPedidos.value = true; // Fecha o modal antes de abrir um novo, se já estiver aberto 
-  pedidoSelecionado.value = pedido.id; // Salva o pedido clicado  
+  visibleDialogPedidos.value = true; // Fecha o modal antes de abrir um novo, se já estiver aberto   
+  numPedidoDisplay.value = pedido.orderId; // Salva o displayId para mostrar no modal
+  idDoPedido.value = pedido.id; // Salva o ID do pedido para usar na confirmação
+  carregarDetalhesDoPedido(numPedidoDisplay.value); // Carrega os detalhes do pedido mais recente
   };
 
 const formatarDataBR = (dataISO) => {
@@ -264,6 +413,7 @@ const carregarPedidos = async () => {
     idPedido.value = data?.pedidos?.[0]?.id || null; // Atualiza o ID do pedido para o mais recente ou null se não houver pedidos  
     novosPedidos.value = data?.pedidos || [];
    
+   
     if(!data?.pedidos){
       showMessage.value = false;
     } 
@@ -271,11 +421,14 @@ const carregarPedidos = async () => {
     if(data.recebidos >= 1){
       pedidosRecebidos.value = data.pedidos.length || 0; // Garante que seja 0 se vier null/undefined
       showMessage.value = true;
+      nenhumPedido.value = false;
       playNotificationSound();
+     
      
     } else {
       showMessage.value = false;
       nenhumPedido.value = true;
+      pedidosRecebidos.value = 0;
     }       
 
   } catch (error) {
@@ -498,6 +651,10 @@ const pedidoEntregue = (pos) => {
     /* margin-left: 225px; */
 }
 
+.displayPedido{
+  display: flex;
+  background-color: #2ecc71;
+}
 
 }
 </style>

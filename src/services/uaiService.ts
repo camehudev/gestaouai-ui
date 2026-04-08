@@ -51,5 +51,6 @@ export const uaiService = {
       }
     });
     return response.data;
-  }
+  },
+
 };

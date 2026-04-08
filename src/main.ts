@@ -23,6 +23,8 @@ import Dialog from 'primevue/dialog';
 import ConfirmDialog from 'primevue/confirmdialog';
 import Toast from 'primevue/toast';
 import Message from 'primevue/message';
+import InlineMessage from 'primevue/inlinemessage';
+
 
 
 
@@ -51,6 +53,7 @@ app.component('ToggleSwitch', ToggleSwitch);
 app.component('Dialog', Dialog);
 app.component('Toast', Toast);
 app.component('Message', Message);
+app.component('InlineMessage',InlineMessage)
 
 // 3. ATIVE O RIPPLE DENTRO DO USE(PRIMEVUE)
 app.use(PrimeVue, {
