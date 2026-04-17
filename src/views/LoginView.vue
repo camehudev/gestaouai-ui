@@ -81,6 +81,8 @@ const handleLogin = async () => {
       password: password.value
     });
 
+    console.log('data => ', data)
+
      sessionManager.setUserData(data.user.empresaId, data.user.uaiMerchantId, data.user.role);
 
     toast.add({ 

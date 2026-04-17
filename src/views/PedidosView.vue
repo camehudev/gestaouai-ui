@@ -1,5 +1,5 @@
 <template>
-  <div v-if="showMessage" class="card">
+  <div v-if="recebidos.length" class="card">
         <Message size="large"  severity="error" class="msg-pulsante"> 
         <i class="pi pi-shopping-cart" style="font-size: 2rem">&nbsp; Oba! Você tem um novo pedido!</i>
            </Message> 
@@ -20,11 +20,11 @@
       <div class="kanban-col flex-1">
         <div class="kanban-header novo">
           <span class="font-bold">NOVO PEDIDO</span>
-          <Badge :value="pedidosRecebidos" severity="info"></Badge>
+          <Badge :value="recebidos.length? recebidos.length : 0 " severity="info"></Badge>
         </div>
        <div class="kanban-content flex flex-column">
             <div 
-              v-for="pedido in novosPedidos" 
+              v-for="pedido in recebidos" 
               :key="pedido.id" 
               class="pedido-card shadow-1"
             >
@@ -50,7 +50,7 @@
               
             </div>
           </div>
-          <div v-if="nenhumPedido" class="flex flex-column align-items-center gap-3 mt-5" style="padding-bottom: 2rem;">
+          <div v-if="!recebidos.length" class="flex flex-column align-items-center gap-3 mt-5" style="padding-bottom: 2rem;">
             <i class="pi pi-info-circle text-4xl text-500"></i>
             <span class="text-lg text-500 ">&nbsp; Nenhum pedido novo no momento.</span>   
                  
@@ -60,69 +60,138 @@
       <div class="kanban-col flex-1">
         <div class="kanban-header preparacao">
           <span class="font-bold">EM PREPARAÇÃO</span>
-          <Badge value="2" severity="warning"></Badge>
+          <Badge :value="confirmados.length" severity="info"></Badge>          
         </div>
-        <div class="kanban-content flex flex-column gap-3">
-          <div class="pedido-card shadow-1 border-left-3 border-orange-500">
-            <div class="flex justify-content-between mb-2">
-              <span class="font-bold">#1025</span>
-              <span class="text-sm text-500">10:30</span>
-            </div>
-            <div class="text-sm font-medium mb-2">João Silva</div>
-            <div class="text-xs text-600 mb-3">1x Pizza Calabresa, 1x Coca-Cola</div>
-              <div style="margin-top: 1rem;">
-                 <Button label="Pedido pronto" icon="" class="p-button-sm p-mt-6 w-full" @click="pedidoPronto('top')" />
+
+        <div class="kanban-content flex flex-column">
+            <div 
+              v-for="pedido in confirmados" 
+              :key="pedido.id" 
+              class="pedido-card shadow-1"
+            >
+              <div class="flex flex-column mb-2">
+                <span class="font-bold mb-1"><strong>Pedido: {{ pedido.displayId }}</strong></span><br>
+                <span class="text-sm text-500 mb-1"><strong>Data: &nbsp;</strong>{{ formatarDataBR(pedido.createdAt) }} as {{formatarHoraBR(pedido.createdAt) }}</span>
               </div>
+              
+              <!-- <div class="text-sm font-medium mb-2"><strong>Cliente:</strong> {{ pedido.customer.name }}</div> -->
+              
+              <!-- <div class="text-xs text-600 mb-3">
+                {{ pedido.itensResumo }}
+              </div> -->
+
+              <div style="margin-top: 1rem;">
+                <Button 
+                  label="Ver detalhes" 
+                  class="p-button-sm w-full" 
+                  @click="abrirDetalhes(pedido)" 
+                />
+                
+              </div>              
+              
+            </div>
           </div>
-        </div>
-      </div>
+          <div v-if="!confirmados.length" class="flex flex-column align-items-center gap-3 mt-5" style="padding-bottom: 2rem;">
+            <i class="pi pi-info-circle text-4xl text-500"></i>
+            <span class="text-lg text-500 ">&nbsp; Nenhum pedido em preparação.</span>  
+                 
+          </div>
+      </div>  
+
+
 
       <div class="kanban-col flex-1">
         <div class="kanban-header entrega">
           <span class="font-bold">SAIU PARA ENTREGA</span>
-          <Badge value="1" severity="success"></Badge>
+           <Badge :value="despachados.length? despachados.length : 0 " severity="info"></Badge>
         </div>
-        <div class="kanban-content flex flex-column gap-3">
-           <div class="pedido-card shadow-1 border-left-3 border-green-500">
-             <div class="flex justify-content-between mb-2">
-              <span class="font-bold">#1020</span>
-              <span class="text-sm text-500">09:50</span>
-            </div>
-            <div class="text-sm font-medium">Entregador: Marcos</div>
-            <div class="text-xs mt-2 italic text-600">Destino: Rua das Flores, 123</div>
-            <div style="margin-top: 1rem;">
-               <Button label="Confirmar entrega" icon="" class="p-button-sm p-mt-6 w-full" @click="pedidoEntregue('top')" />
+
+
+        <div class="kanban-content flex flex-column">
+            <div 
+              v-for="pedido in despachados" 
+              :key="pedido.id" 
+              class="pedido-card shadow-1"
+            >
+              <div class="flex flex-column mb-2">
+                <span class="font-bold mb-1"><strong>Pedido: {{ pedido.displayId }}</strong></span><br>
+                <span class="text-sm text-500 mb-1"><strong>Data: &nbsp;</strong>{{ formatarDataBR(pedido.createdAt) }} as {{formatarHoraBR(pedido.createdAt) }}</span>
+              </div>
+              
+              <!-- <div class="text-sm font-medium mb-2"><strong>Cliente:</strong> {{ pedido.customer.name }}</div> -->
+              
+              <!-- <div class="text-xs text-600 mb-3">
+                {{ pedido.itensResumo }}
+              </div> -->
+
+              <div style="margin-top: 1rem;">
+                <Button 
+                  label="Ver detalhes" 
+                  class="p-button-sm w-full" 
+                  @click="abrirDetalhes(pedido)" 
+                />
+                
+              </div>              
+              
             </div>
           </div>
-          
-        </div>
-      </div>
+          <div v-if="!despachados.length" class="flex flex-column align-items-center gap-3 mt-5" style="padding-bottom: 2rem;">
+            <i class="pi pi-info-circle text-4xl text-500"></i>
+            <span class="text-lg text-500 ">&nbsp; Nenhum pedido sendo entregue.</span>  
+                 
+          </div>
+      </div> 
+
 
       <div class="kanban-col flex-1">
       <div class="kanban-header cancelado">
       <span class="font-bold uppercase text-sm">Pedidos Cancelados</span>
-      <Badge value="1" severity="danger"></Badge>
+        <Badge :value="cancelados.length? cancelados.length : 0 " severity="info"></Badge>
       </div>
 
-      <div class="kanban-content flex flex-column gap-3">
-      <div class="pedido-card shadow-1 border-left-3 border-red-500 opacity-80">
-        <div class="flex justify-content-between mb-2">
-          <span class="font-bold text-700">#1020</span>
-          <span class="text-xs text-500">Cancelado às 10:15</span>
-        </div>
-        
-        <div class="text-sm font-medium text-800 mb-1">Cliente: Marcos Silva</div>
-        
-        <div class="text-xs p-1 bg-red-50 text-red-600 border-round">
-          <i class="pi pi-times-circle mr-1"></i>
-          <span>Motivo: Item indisponível</span>
-        </div>
-      </div>
-      </div>
+      <div class="kanban-content flex flex-column">
+            <div 
+              v-for="pedido in cancelados" 
+              :key="pedido.id" 
+              class="pedido-card shadow-1"
+            >
+              <div class="flex flex-column mb-2">
+                <span class="font-bold mb-1"><strong>Pedido: {{ pedido.displayId }}</strong></span><br>
+                <span class="text-sm text-500 mb-1"><strong>Data: &nbsp;</strong>{{ formatarDataBR(pedido.createdAt) }} as {{formatarHoraBR(pedido.createdAt) }}</span>
+              </div>
+              
+              <!-- <div class="text-sm font-medium mb-2"><strong>Cliente:</strong> {{ pedido.customer.name }}</div> -->
+              
+              <!-- <div class="text-xs text-600 mb-3">
+                {{ pedido.itensResumo }}
+              </div> -->
+
+              <div style="margin-top: 1rem;">
+                <Button 
+                  label="Ver detalhes" 
+                  class="p-button-sm w-full" 
+                  @click="abrirDetalhes(pedido)" 
+                />
+                
+              </div>              
+              
+            </div>
+          </div>
+          <div v-if="!cancelados.length" class="flex flex-column align-items-center gap-3 mt-5" style="padding-bottom: 2rem;">
+            <i class="pi pi-info-circle text-4xl text-500"></i>
+            <span class="text-lg text-500 ">&nbsp; Nenhum pedido sendo entregue.</span>  
+                 
+          </div>
+
       </div>
 
-    </div>
-  </div>
+        
+        
+
+      </div>
+
+      
+      </div> 
 
       <Toast />
       <ConfirmDialog></ConfirmDialog>
@@ -226,11 +295,17 @@
                         <div>Cliente:&nbsp;{{ detalhesDoPedido?.customer?.name }}</div><br>
                         <div style="margin-top: 1px;">Telefone:&nbsp;{{ detalhesDoPedido?.customer?.phone?.number }}</div>
                        
-                      </div>
+                      </div>   
+
+                       <div>{{ fullCodePedido }}</div>
 
                     <footer style="display: flex; justify-content: center;">
-                      <Button style="margin: .5rem;" label="Rejeitar" severity="secondary" @click="getConfirmPedidos(idDoPedido.value)" />              
-                      <Button style="margin: .5rem;" label="Aceitar" severity="success" @click="getConfirmPedidos(pedidoSelecionado)" />
+                      <Button  style="margin: .5rem;" label="Rejeitar" severity="secondary" />             
+                      <Button v-if="confirmados.length && detalhesDoPedido?.orderType === 'DELIVERY'" style="margin: .5rem;"  label="Despachar - DELIVERY" severity="success" @click="getDespacharPedido()" />
+                      <Button v-if="confirmados.length && detalhesDoPedido?.orderType === 'TAKEOUT' " style="margin: .5rem;" label="Despachar - RETIRADA" severity="success" @click="getReadyToPickup()" />
+                      <Button v-if="recebidos.length" style="margin: .5rem;" label="Aceitar" severity="success" @click="getConfirmPedidos()" />
+                      <Button v-if="despachados.length " style="margin: .5rem;" label="Confirmar entrega" severity="success" @click="getPedidoEntrege()" />
+                      
                     </footer>            
                 </Dialog>        
               </div> 
@@ -259,8 +334,18 @@ const nenhumPedido = ref(false);
 const idPedido = ref(null);
 const idDoPedido = ref(null);
 const idPedidoAck = ref(null);
+const pedidoOrderId = ref(null);
 const numPedidoDisplay= ref(null);
 const detalhesDoPedido=ref({})
+
+const recebidos = ref([]);
+const confirmados = ref([]);
+const despachados = ref([]);
+const cancelados = ref([]);
+
+const stateMerchant= ref('');
+const fullCodePedido = ref('')
+
 
 const visible = ref(false);
 const  visiblePedidoPronto = ref(false);
@@ -278,11 +363,12 @@ const isSoundEnabled = ref(true);
 let intervalId = null;
 
 
+
 const carregarDetalhesDoPedido = async (idPedido) => {
   try {
    
     // Chamada ao novo serviço
-    const dadosCompletos = await pedidoService.buscarDetalhesUaiRango(idPedido);  
+    const dadosCompletos = await pedidoService.buscarDetalhesUaiRango(idPedido);
     const dadosPedidos={
       createdAt:dadosCompletos?.createdAt,
       orderType: dadosCompletos?.orderType,
@@ -292,11 +378,11 @@ const carregarDetalhesDoPedido = async (idPedido) => {
       customer:dadosCompletos?.customer, 
     }
 
+
     detalhesDoPedido.value = dadosPedidos;
    
     pedidoSelecionado.value = dadosCompletos.displayId; // Salva o pedido clicado       
-    console.log(dadosCompletos?.total)
-    
+   
 
   } catch (error) {
 
@@ -326,17 +412,102 @@ const traduzirMetodoPagamento = (method) => {
   }
 };
 
+const getReadyToPickup = ()=>{
+  const tenantId = sessionStorage.getItem('empresaId');
 
-const getConfirmPedidos = async (idPedido) => {
+  // 1. Validação defensiva (Early Return)
+  if (!tenantId) {
+    console.error("Empresa não identificada na sessão.");
+    return;
+  }
+
+  try {
+     uaiService.confirmaPedidoProntoRetirada(tenantId, pedidoOrderId.value)
+    uaiService.confirmarProcessamentoPelaRota(tenantId, [idDoPedido.value]);
+
+       // 3. Feedback ao usuário (Sucesso)
+    visibleDialogPedidos.value = false;
+    toast.add({ severity: 'success', summary: 'Sucesso', detail: 'Pedido entregue com sucesso!' , life: 3000 });
+    carregarPedidos();
+    
+  } catch (error) {
+    console.error("Falha ao despachar pedido:", error);  
+    toast.add({ severity: 'error', summary: 'Error', detail: `Erro ao despachar: ${error.message || "Tente novamente."}` , life: 3000 });
+    
+  }
+}
+
+
+const getPedidoEntrege = ()=>{
+  const tenantId = sessionStorage.getItem('empresaId');
+
+  // 1. Validação defensiva (Early Return)
+  if (!tenantId) {
+    console.error("Empresa não identificada na sessão.");
+    return;
+  }
+
+  try {
+
+    uaiService.confirmarProcessamentoPelaRota(tenantId, [idDoPedido.value]);
+
+       // 3. Feedback ao usuário (Sucesso)
+    visibleDialogPedidos.value = false;
+    toast.add({ severity: 'success', summary: 'Sucesso', detail: 'Pedido entregue com sucesso!' , life: 3000 });
+    carregarPedidos();
+    
+  } catch (error) {
+    console.error("Falha ao despachar pedido:", error);  
+    toast.add({ severity: 'error', summary: 'Error', detail: `Erro ao despachar: ${error.message || "Tente novamente."}` , life: 3000 });
+    
+  }
+}
+
+const getDespacharPedido = async () => {
+  const tenantId = sessionStorage.getItem('empresaId');
+  
+  // 1. Validação defensiva (Early Return)
+  if (!tenantId) {
+    console.error("Empresa não identificada na sessão.");
+    return;
+  }
+
+  try {
+    // 2. Execução paralela (Mais rápido que esperar uma para depois a outra)
+    // Se as chamadas forem independentes, use Promise.all
+    const [dataAceite, dataProcessamento] = await Promise.all([
+      uaiService.confirmarPedidoPronto(tenantId, pedidoOrderId.value),
+      uaiService.confirmarProcessamentoPelaRota(tenantId, [idDoPedido.value])
+    ]);
+
+    console.log("Despacho realizado com sucesso:", { dataAceite, dataProcessamento });
+    
+    // 3. Feedback ao usuário (Sucesso)
+    visibleDialogPedidos.value = false;
+    toast.add({ severity: 'success', summary: 'Sucesso', detail: 'Pedido pronto para entrega!' , life: 3000 });
+    carregarPedidos();
+    
+  } catch (error) {
+    // 4. Tratamento de erro centralizado
+    console.error("Falha ao despachar pedido:", error);    
+    toast.add({ severity: 'error', summary: 'Error', detail: `Erro ao despachar: ${error.message || "Tente novamente."}` , life: 3000 });
+  }
+};
+
+
+const getConfirmPedidos = async () => {
  const tenantId = sessionStorage.getItem('empresaId');
   
   // Transformamos o ID único em um Array, pois a API da UaiRango espera uma lista
-  const payload = [idDoPedido.value]; 
-
+  const payload = [idDoPedido.value];  
+  const payloadOrderId = pedidoOrderId.value
+  
   try {
-    // Agora o uaiService.confirmarProcessamentoPelaRota EXISTE!
-    const data = await uaiService.confirmarProcessamentoPelaRota(tenantId, payload);
-   
+    // Agora o uaiService.confirmarProcessamentoPelaRota EXISTE!   
+     const dataAceite = await uaiService.confirmarAceitePedido(tenantId, payloadOrderId);
+     const data = await uaiService.confirmarProcessamentoPelaRota(tenantId, payload);
+
+     
     if (data.sucesso) {
       toast.add({ severity: 'success', summary: 'Sucesso', detail: data.mensagem, life: 3000 });
       visibleDialogPedidos.value = false;    
@@ -411,9 +582,15 @@ const carregarPedidos = async () => {
   try {
     const data = await pedidoService.getPedidosByTenant(tenantId); 
     idPedido.value = data?.pedidos?.[0]?.id || null; // Atualiza o ID do pedido para o mais recente ou null se não houver pedidos  
+    pedidoOrderId.value = data?.pedidos?.[0]?.orderId || null;
     novosPedidos.value = data?.pedidos || [];
-   
-   
+    fullCodePedido.value = data?.pedidos?.[0]?.fullCode | [] ;
+    
+
+    recebidos.value = data?.pedidos.filter(p => p.fullCode === 'PLACED');
+    confirmados.value = data?.pedidos.filter(p => p.fullCode === 'CONFIRMED');
+    despachados.value = data?.pedidos.filter(p => p.fullCode === 'DISPATCHED');
+
     if(!data?.pedidos){
       showMessage.value = false;
     } 
@@ -446,18 +623,49 @@ onBeforeUnmount(() => {
   if (intervalId) {
     clearInterval(intervalId);
   }
-});
+}); 
+
+// Verificar se a Empresa está aberta
+const getStatusMerchant = async ()=>{
+  const empresaId = sessionStorage.getItem('empresaId');
+  const merchantId = sessionStorage.getItem('merchantId')
+
+  const data = await uaiService.getStatus(empresaId, merchantId); 
+  console.log(data[0].state)
+  stateMerchant.value = data[0].state;
+
+}
+
+
+const runPolling = async () => {
+  try {
+    await getStatusMerchant(); // Aguarda terminar antes de prosseguir
+    
+    console.log('stateMerchant => ', stateMerchant.value);
+
+    if (stateMerchant.value === 'OK') {      
+       await carregarPedidos(); // Aguarda carregar antes de esperar o próximo ciclo
+    }
+  } catch (error) {
+    console.error("Erro no ciclo de atualização:", error);
+  } finally {
+    // Só agenda a próxima execução APÓS o término da atual
+    intervalId = setTimeout(runPolling, 30000);
+  }
+};
+
+
+
+// Para parar (ex: no unmounted ou destroy do componente)
+// clearTimeout(intervalId);
+
 
  // Executa assim que o componente é montado no DOM
-onMounted(() => {
-  // 1. Executa a primeira carga assim que abrir a tela
-  carregarPedidos();
+onMounted(() => { 
 
-  // 2. Configura o intervalo para repetir a carga
-  // Note que o "intervalId =" está dentro da função agora
-  intervalId = setInterval(() => {
-       carregarPedidos();
-  }, 30000);
+ // Inicia o ciclo
+    runPolling();
+  
 });
 
 const confirm1 = () => {    

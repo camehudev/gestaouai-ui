@@ -120,7 +120,7 @@ const showSuccess = () => {
 
 const buscarStatusDaAPI = async () => {
   try {
-    const data = await uaiService.getStatus(empresaId, merchantId);    
+    const data = await uaiService.getStatus(empresaId, merchantId);     
    
     if(data[0].state){
        checkedStatusCaixa.value = data[0].state? true : false;

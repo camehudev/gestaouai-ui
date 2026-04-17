@@ -31,11 +31,12 @@ export const uaiService = {
 
   // ADICIONE ESTA FUNÇÃO AQUI:
   async getStatus(empresaId: string, merchantId: string) {
+    
     // Note que a rota aqui deve bater com a que você criou no Express
     const response = await api.get(`/${empresaId}/status/${merchantId}`, {
        headers: {                 
         'Content-Type': 'application/json', 
-        // 'x-api-key': import.meta.env.VITE_UAIRANGO_API_KEY || ''       
+        'x-api-key': import.meta.env.VITE_UAIRANGO_API_KEY || ''       
       }
   });
     return response.data;
@@ -52,5 +53,52 @@ export const uaiService = {
     });
     return response.data;
   },
+
+  async confirmarAceitePedido(tenantId:string,orderId:string){
+  
+    const response = await axios.post(`http://localhost:3000/pedidos/${orderId}/confirmar`,{
+       headers: {                 
+        'Content-Type': 'application/json', 
+        'x-api-key': import.meta.env.VITE_UAIRANGO_API_KEY || '',
+        'tenant-id': tenantId
+        
+      }
+    })
+
+    return response.data
+
+  },
+
+
+  async confirmarPedidoPronto(tenantId:string,orderId:string){
+  
+    const response = await axios.post(`http://localhost:3000/despachar/${orderId}`,{
+       headers: {                 
+        'Content-Type': 'application/json', 
+        'x-api-key': import.meta.env.VITE_UAIRANGO_API_KEY || '',
+        'tenant-id': tenantId
+        
+      }
+    })
+
+    return response.data
+
+  },
+
+   async confirmaPedidoProntoRetirada(tenantId:string,orderId:string){
+  
+    const response = await axios.post(`http://localhost:3000/readyToPickup/${orderId}`,{
+       headers: {                 
+        'Content-Type': 'application/json', 
+        'x-api-key': import.meta.env.VITE_UAIRANGO_API_KEY || '',
+        'tenant-id': tenantId
+        
+      }
+    })
+
+    return response.data
+
+  }
+
 
 };
