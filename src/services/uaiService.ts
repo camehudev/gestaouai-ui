@@ -31,6 +31,9 @@ export const uaiService = {
 
   // ADICIONE ESTA FUNÇÃO AQUI:
   async getStatus(empresaId: string, merchantId: string) {
+
+    console.log('EMPRESA', empresaId);
+    console.log('MERCHANT', merchantId);    
     
     // Note que a rota aqui deve bater com a que você criou no Express
     const response = await api.get(`/${empresaId}/status/${merchantId}`, {

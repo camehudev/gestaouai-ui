@@ -299,11 +299,13 @@
 
                        <div>{{ fullCodePedido }}</div>
 
+                       <div>{{ detalhesPedido }}</div>
+
                     <footer style="display: flex; justify-content: center;">
                       <Button  style="margin: .5rem;" label="Rejeitar" severity="secondary" />             
                       <Button v-if="confirmados.length && detalhesDoPedido?.orderType === 'DELIVERY'" style="margin: .5rem;"  label="Despachar - DELIVERY" severity="success" @click="getDespacharPedido()" />
                       <Button v-if="confirmados.length && detalhesDoPedido?.orderType === 'TAKEOUT' " style="margin: .5rem;" label="Despachar - RETIRADA" severity="success" @click="getReadyToPickup()" />
-                      <Button v-if="recebidos.length" style="margin: .5rem;" label="Aceitar" severity="success" @click="getConfirmPedidos()" />
+                      <Button v-if="recebidos.length >= 1" style="margin: .5rem;" label="Aceitar" severity="success" @click="getConfirmPedidos()" />
                       <Button v-if="despachados.length " style="margin: .5rem;" label="Confirmar entrega" severity="success" @click="getPedidoEntrege()" />
                       
                     </footer>            
@@ -325,6 +327,7 @@ import { Pedido } from '../../../API/src/core/entities/Pedidos';
 import { uaiService } from "@/services/uaiService";
 import { Pagamento } from '../../../API/src/core/entities/Pagamentos';
 
+
 const confirm = useConfirm();
 const toast = useToast();
 const pedidosRecebidos = ref(0);
@@ -337,6 +340,7 @@ const idPedidoAck = ref(null);
 const pedidoOrderId = ref(null);
 const numPedidoDisplay= ref(null);
 const detalhesDoPedido=ref({})
+const orderIdPedido = ref(null)
 
 const recebidos = ref([]);
 const confirmados = ref([]);
@@ -364,24 +368,27 @@ let intervalId = null;
 
 
 
-const carregarDetalhesDoPedido = async (idPedido) => {
+const carregarDetalhesDoPedido = async (orderId) => {
   try {
-   
+   console.log(idDoPedido)
     // Chamada ao novo serviço
-    const dadosCompletos = await pedidoService.buscarDetalhesUaiRango(idPedido);
-    const dadosPedidos={
-      createdAt:dadosCompletos?.createdAt,
-      orderType: dadosCompletos?.orderType,
-      itens:dadosCompletos?.items,
-      payments:dadosCompletos?.payments, 
-      total:dadosCompletos?.total,
-      customer:dadosCompletos?.customer, 
-    }
+    const dadosCompletos = await pedidoService.buscarDetalhesUaiRango(orderId, idDoPedido.value);
+   
 
+    const dadosPedidos={
+      createdAt:dadosCompletos?.data?.createdAt,
+      orderType: dadosCompletos?.data?.orderType,
+      itens:dadosCompletos?.data?.items,
+      payments:dadosCompletos?.data?.payments, 
+      total:dadosCompletos?.data?.total,
+      customer:dadosCompletos?.data?.customer, 
+    }
 
     detalhesDoPedido.value = dadosPedidos;
    
-    pedidoSelecionado.value = dadosCompletos.displayId; // Salva o pedido clicado       
+    pedidoSelecionado.value = dadosCompletos.data?.displayId; // Salva o pedido clicado       
+
+
    
 
   } catch (error) {
@@ -503,8 +510,10 @@ const getConfirmPedidos = async () => {
   const payloadOrderId = pedidoOrderId.value
   
   try {
+    const sabePedidoItem = await u
     // Agora o uaiService.confirmarProcessamentoPelaRota EXISTE!   
      const dataAceite = await uaiService.confirmarAceitePedido(tenantId, payloadOrderId);
+     
      const data = await uaiService.confirmarProcessamentoPelaRota(tenantId, payload);
 
      
@@ -581,6 +590,10 @@ const carregarPedidos = async () => {
 
   try {
     const data = await pedidoService.getPedidosByTenant(tenantId); 
+
+    
+
+
     idPedido.value = data?.pedidos?.[0]?.id || null; // Atualiza o ID do pedido para o mais recente ou null se não houver pedidos  
     pedidoOrderId.value = data?.pedidos?.[0]?.orderId || null;
     novosPedidos.value = data?.pedidos || [];

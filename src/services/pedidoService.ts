@@ -17,9 +17,9 @@ export const pedidoService = {
   },
 
 
-  async buscarDetalhesUaiRango(orderId: string) {
+  async buscarDetalhesUaiRango(orderId: string, idPedido:string,) {   
     // Chamamos o NOSSO backend, que tem a permissão de falar com a UaiRango
-    const response = await api.get(`/order/pedido/${orderId}`,{
+    const response = await api.get(`/order/pedido/${orderId}/${idPedido}`,{
           headers: {                 
             'Content-Type': 'application/json', 
             'x-api-key': import.meta.env.VITE_UAIRANGO_API_KEY || '' , 
