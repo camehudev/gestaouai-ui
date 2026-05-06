@@ -46,6 +46,8 @@ export const uaiService = {
   },
 
   async confirmarProcessamentoPelaRota(tenantId:string, eventIds: string[]) {
+
+
     // Note: eventIds deve ser um array ["id_do_pedido"]
     const response = await axios.post(`http://localhost:3000/pedidos/confirmar/${tenantId}`, {
       eventIds: eventIds,
@@ -58,6 +60,8 @@ export const uaiService = {
   },
 
   async confirmarAceitePedido(tenantId:string,orderId:string){
+
+    alert(orderId)
   
     const response = await axios.post(`http://localhost:3000/pedidos/${orderId}/confirmar`,{
        headers: {                 
@@ -101,6 +105,19 @@ export const uaiService = {
 
     return response.data
 
+  },
+
+  async salvarPedidoProntoRetirada(tenantId:string, pedido: any) {
+  
+    const response = await axios.post(`http://localhost:3000/readyToPickup/${tenantId}`, pedido, {
+      headers: {                 
+        'Content-Type': 'application/json', 
+        'x-api-key': import.meta.env.VITE_UAIRANGO_API_KEY || '',
+        'tenant-id': tenantId  
+      }
+    });
+
+    return response
   }
 
 

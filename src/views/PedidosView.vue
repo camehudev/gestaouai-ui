@@ -102,17 +102,19 @@
 
       <div class="kanban-col flex-1">
         <div class="kanban-header entrega">
-          <span class="font-bold">SAIU PARA ENTREGA</span>
-           <Badge :value="despachados.length? despachados.length : 0 " severity="info"></Badge>
+          <span class="font-bold">PRONTO PARA ENTREGA</span>
+           <div v-if="despachados.length || prontoParaRetirada.length"><Badge :value="despachados.length || prontoParaRetirada.length? despachados.length + prontoParaRetirada.length : 0 " severity="info"></Badge></div>
+          
         </div>
 
 
-        <div class="kanban-content flex flex-column">
+        <div v-if="despachados.length" class="kanban-content flex flex-column">
             <div 
               v-for="pedido in despachados" 
               :key="pedido.id" 
               class="pedido-card shadow-1"
             >
+            <div><Badge :value="'DELIVERY'" severity="info"></Badge></div>
               <div class="flex flex-column mb-2">
                 <span class="font-bold mb-1"><strong>Pedido: {{ pedido.displayId }}</strong></span><br>
                 <span class="text-sm text-500 mb-1"><strong>Data: &nbsp;</strong>{{ formatarDataBR(pedido.createdAt) }} as {{formatarHoraBR(pedido.createdAt) }}</span>
@@ -135,11 +137,44 @@
               
             </div>
           </div>
-          <div v-if="!despachados.length" class="flex flex-column align-items-center gap-3 mt-5" style="padding-bottom: 2rem;">
-            <i class="pi pi-info-circle text-4xl text-500"></i>
-            <span class="text-lg text-500 ">&nbsp; Nenhum pedido sendo entregue.</span>  
-                 
+
+          <div v-if="prontoParaRetirada.length" class="kanban-content flex flex-column">
+            <div 
+              v-for="pedido in prontoParaRetirada" 
+              :key="pedido.id" 
+              class="pedido-card shadow-1"
+            >
+            <div><Badge :value="'RETIRADA'" severity="info"></Badge></div>
+              <div class="flex flex-column mb-2">
+                <span class="font-bold mb-1"><strong>Pedido: {{ pedido.displayId }}</strong></span><br>
+                <span class="text-sm text-500 mb-1"><strong>Data: &nbsp;</strong>{{ formatarDataBR(pedido.createdAt) }} as {{formatarHoraBR(pedido.createdAt) }}</span>
+              </div>
+              
+              <!-- <div class="text-sm font-medium mb-2"><strong>Cliente:</strong> {{ pedido.customer.name }}</div> -->
+              
+              <!-- <div class="text-xs text-600 mb-3">
+                {{ pedido.itensResumo }}
+              </div> -->
+
+              <div style="margin-top: 1rem;">
+                <Button 
+                  label="Ver detalhes" 
+                  class="p-button-sm w-full" 
+                  @click="abrirDetalhes(pedido)" 
+                />
+                
+              </div>              
+              
+            </div>
           </div>
+
+
+          <div v-if="!despachados.length && !prontoParaRetirada.length" class="flex flex-column align-items-center gap-3 mt-5" style="padding-bottom: 0rem; margin: 2rem;">
+            <i class="pi pi-info-circle text-4xl text-500"></i>
+            <span class="text-lg text-500 ">&nbsp; Nenhum pedido sendo entregue.</span>                 
+          </div>
+
+         
       </div> 
 
 
@@ -296,18 +331,19 @@
                         <div style="margin-top: 1px;">Telefone:&nbsp;{{ detalhesDoPedido?.customer?.phone?.number }}</div>
                        
                       </div>   
-
+<!-- 
                        <div>{{ fullCodePedido }}</div>
 
-                       <div>{{ detalhesPedido }}</div>
+                       <div>{{ detalhesPedido }}</div> -->
 
                     <footer style="display: flex; justify-content: center;">
                       <Button  style="margin: .5rem;" label="Rejeitar" severity="secondary" />             
-                      <Button v-if="confirmados.length && detalhesDoPedido?.orderType === 'DELIVERY'" style="margin: .5rem;"  label="Despachar - DELIVERY" severity="success" @click="getDespacharPedido()" />
-                      <Button v-if="confirmados.length && detalhesDoPedido?.orderType === 'TAKEOUT' " style="margin: .5rem;" label="Despachar - RETIRADA" severity="success" @click="getReadyToPickup()" />
-                      <Button v-if="recebidos.length >= 1" style="margin: .5rem;" label="Aceitar" severity="success" @click="getConfirmPedidos()" />
-                      <Button v-if="despachados.length " style="margin: .5rem;" label="Confirmar entrega" severity="success" @click="getPedidoEntrege()" />
-                      
+                      <Button v-if="confirmados.length && detalhesDoPedido?.orderType === 'DELIVERY'" style="margin: .5rem;"  label="Despachar(Delivery)" severity="success" @click="getDespacharPedido()" />
+                      <Button v-if="confirmados.length && detalhesDoPedido?.orderType === 'TAKEOUT' && !recebidos.length" style="margin: .5rem;" label="Despachar(Retirada)" severity="success" @click="getReadyToPickup()" />
+                      <Button v-if="recebidos.length && recebidos[0]?.fullCode === 'PLACED'" style="margin: .5rem;" label="Aceitar" severity="success" @click="getConfirmPedidos()" />
+                      <Button v-if="despachados.length" style="margin: .5rem;" label="Confirmar Delivery" severity="success" @click="getPedidoEntrege()" />
+                      <Button v-if="prontoParaRetirada.length && prontoParaRetirada[0]?.fullCode === 'READY_TO_PICKUP' && !confirmados.length && !recebidos.length" style="margin: .5rem;" label="Confirmar retirada" severity="success" @click="getPedidoEntrege()" />
+                                     
                     </footer>            
                 </Dialog>        
               </div> 
@@ -326,6 +362,8 @@ import Toast from 'primevue/toast';
 import { Pedido } from '../../../API/src/core/entities/Pedidos';
 import { uaiService } from "@/services/uaiService";
 import { Pagamento } from '../../../API/src/core/entities/Pagamentos';
+import { Usuario } from '../../../API/src/core/entities/Usuario';
+import { Produto } from '../../../API/src/core/entities/Produtos';
 
 
 const confirm = useConfirm();
@@ -346,6 +384,7 @@ const recebidos = ref([]);
 const confirmados = ref([]);
 const despachados = ref([]);
 const cancelados = ref([]);
+const prontoParaRetirada = ref([]);
 
 const stateMerchant= ref('');
 const fullCodePedido = ref('')
@@ -419,17 +458,19 @@ const traduzirMetodoPagamento = (method) => {
   }
 };
 
-const getReadyToPickup = ()=>{
+const getReadyToPickup = ()=>{ 
+  
   const tenantId = sessionStorage.getItem('empresaId');
 
   // 1. Validação defensiva (Early Return)
   if (!tenantId) {
     console.error("Empresa não identificada na sessão.");
     return;
-  }
+  } 
 
   try {
-     uaiService.confirmaPedidoProntoRetirada(tenantId, pedidoOrderId.value)
+    uaiService.salvarPedidoProntoRetirada(tenantId, confirmados.value);
+    uaiService.confirmaPedidoProntoRetirada(tenantId, pedidoOrderId.value)
     uaiService.confirmarProcessamentoPelaRota(tenantId, [idDoPedido.value]);
 
        // 3. Feedback ao usuário (Sucesso)
@@ -510,12 +551,11 @@ const getConfirmPedidos = async () => {
   const payloadOrderId = pedidoOrderId.value
   
   try {
-    const sabePedidoItem = await u
+  
     // Agora o uaiService.confirmarProcessamentoPelaRota EXISTE!   
      const dataAceite = await uaiService.confirmarAceitePedido(tenantId, payloadOrderId);
      
      const data = await uaiService.confirmarProcessamentoPelaRota(tenantId, payload);
-
      
     if (data.sucesso) {
       toast.add({ severity: 'success', summary: 'Sucesso', detail: data.mensagem, life: 3000 });
@@ -592,7 +632,7 @@ const carregarPedidos = async () => {
     const data = await pedidoService.getPedidosByTenant(tenantId); 
 
     
-
+  console.log('CARREGAR PEDIDOS => ', data?.pedidos?.[0]?.orderId || null)
 
     idPedido.value = data?.pedidos?.[0]?.id || null; // Atualiza o ID do pedido para o mais recente ou null se não houver pedidos  
     pedidoOrderId.value = data?.pedidos?.[0]?.orderId || null;
@@ -603,6 +643,9 @@ const carregarPedidos = async () => {
     recebidos.value = data?.pedidos.filter(p => p.fullCode === 'PLACED');
     confirmados.value = data?.pedidos.filter(p => p.fullCode === 'CONFIRMED');
     despachados.value = data?.pedidos.filter(p => p.fullCode === 'DISPATCHED');
+    prontoParaRetirada.value = data?.pedidos.filter(p => p.fullCode === 'READY_TO_PICKUP');
+
+    console.log('Pedidos p/ retirada => ', prontoParaRetirada.value)
 
     if(!data?.pedidos){
       showMessage.value = false;
